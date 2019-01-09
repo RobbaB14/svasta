@@ -25,7 +25,7 @@ def A_star(graph, a, b, H):
     heapq.heapify(nodes)
     while len(nodes)>0:
         (t,v) = heapq.heappop(nodes)
-        for (i,j) in G[v]: # (i,j) = (node, cost)
+        for (i,j) in graph[v]: # (i,j) = (node, cost)
             if cost[i] > t + j + H[i]:
                 cost[i] = t + j + H[i]
                 heapq.heappush(nodes, (t+j+H[i], i))
@@ -38,8 +38,12 @@ def A_star(graph, a, b, H):
     best_path = best_path[::-1]
 
     return best_path
-G = [[(1,3),(4,3)],[],[(0,1),(1,2)],[(2,4),(0,7)],[(3,2)]]
+
+
+# example of input:
+graph = [[(1,3),(4,3)],[],[(0,1),(1,2)],[(2,4),(0,7)],[(3,2)]]
 H = [1,6,15,3,4]
-b = 1
 a = 4
-print(A_star(G,a,b,H))
+b = 1
+
+print(A_star(graph,a,b,H))
