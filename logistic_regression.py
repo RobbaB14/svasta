@@ -10,7 +10,7 @@ def sigma(i,X,beta):
 def log_likelihood(X, Y, beta):
     s = 0
     for i in range(len(X)):
-        s += math.log(1-sigma(i,X,beta))+(Y[i]*X[i]*beta)[0,0]
+        s += math.log(1-sigma(i,X,beta))+(Y[0,i]*X[i]*beta)[0,0]
     return s
 
 def d_l(X,Y,beta):
@@ -18,14 +18,13 @@ def d_l(X,Y,beta):
     for i in range(len(X)):
         p_i = sigma(i,X,beta)
         P.append(p_i)
-    P = np.matrix(P)
-    P = P.transpose()
+    P = np.matrix(P).transpose()
+    Y = Y.transpose()
     dl = X.transpose()*(Y-P)
     return dl
 
 def dd_l(Y,X,beta):
     V = np.zeros((len(X),len(X)))
-    V = np.matrix(V)
     for i in range(len(X)):
         V[i,i] = sigma(i,X,beta)*(1-sigma(i,X,beta))
     ddl = -X.transpose()*V*X
@@ -44,24 +43,39 @@ def my_newton(f,df,ddf,b0,tol):
         old_f = new_f
     return (b)
 
-def logistic_regression(X,Y,x):
-    f = lambda beta: log_likelihood(X, Y, beta)
+def logistic_regression(X,Y,x,X_test,Y_test):
+    f = lambda beta: log_likelihood(X,Y,beta)
     df = lambda beta: d_l(X,Y,beta)
     ddf = lambda beta: dd_l(Y,X,beta)
-    b0 = np.matrix((1,1,1)) # ??
-    b0 = b0.transpose()
-    model_beta = my_newton(f,df,ddf,b0, 10**(-8))
-    prediction = sigma(0,x,model_beta)
-    return(prediction)
+    b0 = x
+    model_beta = my_newton(f,df,ddf,b0,10**(-8)).transpose()
+    Y_prediction = []
+    for i in range(len(X_test)):
+        Y_prediction.append(sigma(i, X_test, model_beta.transpose()))
+
+    dY = Y_prediction-Y_test
+    approx_mis = dY.sum()/dY.shape[1]
+    return(approx_mis)
 
 
-X = np.matrix(((1,0,1),(1,1,0),(0,1,1),(0,1,0)))
-Y = np.matrix((1,1,0,0))
-x = np.matrix((1,0,1))
-Y = Y.transpose()
-print(logistic_regression(X,Y,x))
+# imput:
+X_vec = []
+Y_vec = []
+data = open('iris_data.txt', 'r')
+line = data.readline().split(',')
+while len(line)>1:
+    vect = line[0:3]
+    X_vec.append([float(c) for c in vect[0:3]])
+    if line[4] == 'Iris-setosa\n':
+        Y_vec.append(1)
+    else:
+        Y_vec.append(0)
+    line = data.readline().split(',')
+data.close()
+X = np.matrix(X_vec[0:120])
+X_test = np.matrix(X_vec[120:151])
+Y = np.matrix(Y_vec[0:120])
+Y_test = np.matrix(Y_vec[120:151])
+x = np.matrix((0, 1, -1)).transpose()
 
-# references:
-# https://statacumen.com/teach/SC1/SC1_11_LogisticRegression.pdf
-# http://www.stat.cmu.edu/~cshalizi/350/lectures/26/lecture-26.pdf
-
+print(logistic_regression(X,Y,x,X_test,Y_test))
