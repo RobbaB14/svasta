@@ -5,7 +5,7 @@ import numpy as np
 
 def sigma(i,X,beta):
     x_i = -X[i]
-    return (1+math.exp((x_i*beta)[0,0]))**(-1)
+    return (1+np.exp((x_i*beta)[0,0]))**(-1)
 
 def log_likelihood(X, Y, beta):
     s = 0
@@ -43,7 +43,7 @@ def my_newton(f,df,ddf,b0,tol):
         old_f = new_f
     return (b)
 
-def logistic_regression(X,Y,x,X_test,Y_test):
+def logistic_regression(X,Y,x,X_test,treshold):
     f = lambda beta: log_likelihood(X,Y,beta)
     df = lambda beta: d_l(X,Y,beta)
     ddf = lambda beta: dd_l(Y,X,beta)
@@ -51,11 +51,32 @@ def logistic_regression(X,Y,x,X_test,Y_test):
     model_beta = my_newton(f,df,ddf,b0,10**(-8)).transpose()
     Y_prediction = []
     for i in range(len(X_test)):
-        Y_prediction.append(sigma(i, X_test, model_beta.transpose()))
+        prediction = sigma(i, X_test, model_beta.transpose())
+        if prediction > treshold:
+            Y_prediction.append(1)
+        else:
+            Y_prediction.append(0)
+        # Y_prediction.append(sigma(i, X_test, model_beta.transpose()))
 
-    dY = Y_prediction-Y_test
-    approx_mis = dY.sum()/dY.shape[1]
-    return(approx_mis)
+    # dY = Y_prediction-Y_test
+    # approx_mis = dY.sum()/dY.shape[1]
+    return(Y_prediction)
+
+def evaluation(Y_prediction, Y_test):
+    Y_prediction = np.matrix(Y_prediction)
+    Y_test = np.matrix(Y_test)
+    TN = np.count_nonzero(Y_test + Y_prediction==0)
+    TP = np.count_nonzero(np.multiply(Y_test, Y_prediction)==1)
+    FP = np.count_nonzero(Y_test - Y_prediction==-1)
+    FN = np.count_nonzero(Y_test - Y_prediction==1)
+    print(TP, FP, FN, TN)
+    precision = TP / (TP+FP)
+    recall = TP / (TP+FN)
+
+    F1 = (2*precision*recall)/(precision+recall)
+    # print(TP, FP, FN, TN)
+    return (precision, recall, F1)
+
 
 
 # imput:
@@ -72,10 +93,15 @@ while len(line)>1:
         Y_vec.append(0)
     line = data.readline().split(',')
 data.close()
-X = np.matrix(X_vec[0:120])
-X_test = np.matrix(X_vec[120:151])
-Y = np.matrix(Y_vec[0:120])
-Y_test = np.matrix(Y_vec[120:151])
+X = np.matrix(X_vec[0:100])
+X_test = np.matrix(X_vec[100:151])
+Y = np.matrix(Y_vec[0:100])
+Y_test = np.matrix(Y_vec[100:151])
 x = np.matrix((0, 1, -1)).transpose()
 
-print(logistic_regression(X,Y,x,X_test,Y_test))
+treshold = 0.7
+
+
+Y_prediction = logistic_regression(X,Y,x,X_test,treshold)
+(precision, recall, F1)= evaluation(Y_prediction, Y_test)
+print('precision:', precision, ', recall:', recall, ', F1:', F1)
