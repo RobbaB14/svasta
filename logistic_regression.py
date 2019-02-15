@@ -56,10 +56,7 @@ def logistic_regression(X,Y,x,X_test,treshold):
             Y_prediction.append(1)
         else:
             Y_prediction.append(0)
-        # Y_prediction.append(sigma(i, X_test, model_beta.transpose()))
 
-    # dY = Y_prediction-Y_test
-    # approx_mis = dY.sum()/dY.shape[1]
     return(Y_prediction)
 
 def evaluation(Y_prediction, Y_test):
@@ -74,7 +71,6 @@ def evaluation(Y_prediction, Y_test):
     recall = TP / (TP+FN)
 
     F1 = (2*precision*recall)/(precision+recall)
-    # print(TP, FP, FN, TN)
     return (precision, recall, F1)
 
 
